@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package gr.auth.csd.intelligence.experiments;
 
 import cc.mallet.pipe.CharSequence2TokenSequence;
@@ -141,11 +136,6 @@ public class CGS_pWithMALLET extends CGS_pWithWarpLDA {
         double[][] phi = mallet.computePhi();
         double[][] phi_p = mallet.computePhi_p();
 
-//        System.out.println(Arrays.toString(theta[0]));
-//        System.out.println(Arrays.toString(theta_p[0]));
-//        
-//        System.out.println(Arrays.toString(phi[0]));
-//        System.out.println(Arrays.toString(phi_p[0]));
         System.out.println("phi + theta (Griffiths Steyvers estimator): " + mallet.logLikelihood(phi, theta));
         System.out.println("phi_p + theta: " + mallet.logLikelihood(phi_p, theta));
         System.out.println("phi + theta_p: " + mallet.logLikelihood(phi, theta_p));
