@@ -23,7 +23,7 @@ public class LDACmdOption extends CmdOption implements Serializable {
         public double beta = 0.01;
 
     @Option(name="-ntopics", usage="Specify the number of topics")
-        public int K = 200;
+        public int K = 100;
 
     @Option(name="-niters", usage="Specify the number of iterations")
         public int niters = 100;
@@ -36,12 +36,8 @@ public class LDACmdOption extends CmdOption implements Serializable {
 
     @Option(name="-twords", usage="Specify the number of most likely words to be printed for each topic")
         public int twords = 20;
-    @Option(name="-benchmark", usage="BenchMarking (Yao et al.)")
-        public boolean benchmark = false;    
     @Option(name="-perplexity", usage="Calculate and print perplexity")
         public boolean perplexity=false;
-    @Option(name="-serial", usage="Estimate an array of different models. Used for the DepLLDA algorithm")
-        public boolean serial = false;
     @Option(name="-mix", usage="CGS2CVB0 mix")
         public boolean mix;
     @Option(name="-chains", usage="Specify the Markov chains")

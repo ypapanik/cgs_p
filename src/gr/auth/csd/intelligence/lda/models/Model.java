@@ -17,9 +17,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 import gr.auth.csd.intelligence.lda.LDADataset;
+import gr.auth.csd.intelligence.preprocessing.JSONtoWarpLDA;
+import java.io.FileWriter;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -305,8 +309,8 @@ public class Model {
             //System.out.println(/*"log-likelihood:" +*/logLikelihood(data, phi, theta));
 
             //uncomment to use for n_dk vs sum(p_djk) plots
-            if (i > nburnin) {
-                System.out.println(i + " " + ndVsSumprobs(0, 0));
+            if (i > nburnin && i % 100 == 0) {
+                ndVsSumprobs(i, 0);
             }
         }
         //System.out.println(" finished");
@@ -353,22 +357,35 @@ public class Model {
         pool.shutdown();
     }
 
-    private String ndVsSumprobs(int d, int topic) {
+    private void ndVsSumprobs(int iteration, int d) {
         double[] p = new double[K];
-        double sump = 0;
+        double sump[] = new double[K];
+        double ndk[] = new double[K];
         TIntArrayList words = data.getDocs().get(d).getWords();
         for (int w = 0; w < words.size(); w++) {
             int word = data.getDocs().get(d).getWords().get(w);
             for (int k = 0; k < K; k++) {
-                p[k] = (alpha[k] + nd[d][k]) * (nw[k][word] + beta)/(nwsum[k]+V*beta);
+                p[k] = (alpha[k] + nd[d][k]) * (nw[k][word] + beta) / (nwsum[k] + V * beta);
             }
             //average sampling probabilities
             p = Utils.normalize(p, 1);
-            sump += p[topic];
+            for (int k = 0; k < K; k++) {
+                sump[k] += p[k];
+            }
         }
-        for(int k=0; k < K; k++) {
-            nd = Utils.normalize(nd[d], 1);
+        ndk = Arrays.copyOf(nd[d], nd[d].length);
+        sump = Utils.normalize(sump, 1);
+        ndk = Utils.normalize(ndk, 1);
+        StringBuilder sb = new StringBuilder();
+        for (int k = 0; k < K; k++) {
+            sb.append(k).append(" ").append(Math.abs(sump[k]-ndk[k])).append("\n");
+        }
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(iteration + ".txt"))) {
+            bw.append(sb);
+            bw.flush();
+
+        } catch (IOException ex) {
+            Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 }

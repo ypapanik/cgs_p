@@ -52,14 +52,9 @@ public class CmdOption implements Serializable {
     @Option(name = "-fsMethod", usage = "feature selection method")
     public int fsMethod = 1;
 
-    @Option(name = "-zoning", usage = "perform zoning of title/labels.")
-    public boolean zoning = true;
-
     @Option(name = "-predictions", usage = "predictions")
     public String predictionsFile = "predictions";
 
-    @Option(name = "-tp", usage = "true positives.")
-    public String tpFile = "tp/tp";
 
     @Option(name = "-trainFilelibSVM", usage = "training dataset libSVM ")
     public String fileTrainLibsvm = "train.Libsvm";
@@ -98,7 +93,4 @@ public class CmdOption implements Serializable {
     
     @Option(name = "-high2Grams", usage = "higher threshold for bigrams")
     public int highBigrams = 2;
-    
-    @Option(name = "-mlc", usage = "mlc in use")
-        public String mlc = "meta";
 }

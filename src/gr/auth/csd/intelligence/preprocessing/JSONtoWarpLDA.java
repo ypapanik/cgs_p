@@ -28,9 +28,10 @@ public class JSONtoWarpLDA {
         
         
         while ((doc = c.nextDocument()) != null) {
-            List<String> text = doc.getContentAsSentencesOfTokens(true);
-            sb.append(doc.getId()).append(" ").append(doc.getId()).append(" ").
-                    append(text).append("\n");
+            List<String> tokens = doc.getContentAsSentencesOfTokens(true);
+            sb.append(doc.getId()).append(" ").append(doc.getId()).append(" ");
+            for(String token:tokens) sb.append(token);
+            sb.append("\n");
         }
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(warpFile))) {
             bw.append(sb);
