@@ -1,5 +1,6 @@
 package gr.auth.csd.intelligence.lda.models;
 
+import gnu.trove.list.array.TIntArrayList;
 import gr.auth.csd.intelligence.lda.CallableInferencer;
 import gr.auth.csd.intelligence.lda.Evaluate;
 import gr.auth.csd.intelligence.utils.Pair;
@@ -46,7 +47,7 @@ public class Model {
     protected final int samplingLag;
     protected String modelName = null;
     private int threads = 1;
-    int numSamples=0;
+    int numSamples = 0;
 
     public Model(LDADataset data, double a, boolean inf, double b, boolean perp,
             int niters, int nburnin, String modelName, int sl) {
@@ -300,8 +301,13 @@ public class Model {
             }
             //updateParams(false, false);
             Date it = new Date(System.currentTimeMillis());
-            System.out.println(/*"log-likelihood:" +*/logLikelihood(data, phi, theta));
+            //Uncomment to show loglikelihood
+            //System.out.println(/*"log-likelihood:" +*/logLikelihood(data, phi, theta));
 
+            //uncomment to use for n_dk vs sum(p_djk) plots
+            if (i > nburnin) {
+                System.out.println(i + " " + ndVsSumprobs(0, 0));
+            }
         }
         //System.out.println(" finished");
         updateParams(false, true);
@@ -345,6 +351,24 @@ public class Model {
         } catch (InterruptedException ex) {
         }
         pool.shutdown();
+    }
+
+    private String ndVsSumprobs(int d, int topic) {
+        double[] p = new double[K];
+        double sump = 0;
+        TIntArrayList words = data.getDocs().get(d).getWords();
+        for (int w = 0; w < words.size(); w++) {
+            int word = data.getDocs().get(d).getWords().get(w);
+            for (int k = 0; k < K; k++) {
+                p[k] = (alpha[k] + nd[d][k]) * (nw[k][word] + beta)/(nwsum[k]+V*beta);
+            }
+            //average sampling probabilities
+            p = Utils.normalize(p, 1);
+            sump += p[topic];
+        }
+        for(int k=0; k < K; k++) {
+            nd = Utils.normalize(nd[d], 1);
+        }
     }
 
 }
