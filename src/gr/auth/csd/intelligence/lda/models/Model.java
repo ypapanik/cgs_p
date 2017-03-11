@@ -325,8 +325,12 @@ public class Model {
             //System.out.println(/*"log-likelihood:" +*/logLikelihood(data, phi, theta));
 
             //uncomment to use for n_dk vs sum(p_djk) plots
-            if (i > nburnin && i % 100 == 0) {
-                ndVsSumprobs(i, 0);
+            if (i > nburnin && (i==100 ||i % 200 == 0)) {
+                double sumdiffs = 0;
+                for(int d = 0; d < M; d++) {
+                    sumdiffs+= ndVsSumprobs(i, d);
+                }
+                System.out.println(i+" "+sumdiffs+" "+sumdiffs/M);
             }
         }
         //System.out.println(" finished");
@@ -373,7 +377,7 @@ public class Model {
         pool.shutdown();
     }
 
-    private void ndVsSumprobs(int iteration, int d) {
+    private double ndVsSumprobs(int iteration, int d) {
         double[] p = new double[K];
         double sump[] = new double[K];
         double ndk[] = new double[K];
@@ -395,15 +399,21 @@ public class Model {
         StringBuilder sb = new StringBuilder();
         double diff = 0;
         for (int k = 0; k < K; k++) {
-            diff+=sump[k]-ndk[k];
-            sb.append(k).append(" ").append(Math.abs(sump[k]-ndk[k])).append("\n");
+            diff += Math.abs(sump[k] - ndk[k]);
+            if (d == 0) {
+                sb.append(k).append(" ").append(Math.abs(sump[k] - ndk[k])).append("\n");
+            }
         }
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(iteration + ".txt"))) {
-            bw.append(sb);
-            bw.flush();
+        
+        if (d == 0) {
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(iteration + ".txt"))) {
+                bw.append(sb);
+                bw.flush();
 
-        } catch (IOException ex) {
-            Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
+        return diff;
     }
 }

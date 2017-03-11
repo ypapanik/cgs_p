@@ -16,13 +16,21 @@
  */
 package gr.auth.csd.intelligence.experiments;
 
+import gr.auth.csd.intelligence.preprocessing.JSONtoWarpLDA;
 import gr.auth.csd.intelligence.utils.Utils;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -49,7 +57,8 @@ public class CGS_pWithWarpLDA {
     protected List<String> documents;
     protected int docs[][];
 
-    public CGS_pWithWarpLDA() { }
+    public CGS_pWithWarpLDA() {
+    }
 
     public CGS_pWithWarpLDA(int K, double alpha, double beta, String warpStatesFile, String vocabulary) {
         this.K = K;
@@ -82,16 +91,26 @@ public class CGS_pWithWarpLDA {
                 z[doc][i - 1] = topic;
                 docs[doc][i - 1] = wordType;
             }
-            
+
 //            System.out.println(document+" \n z:"+Arrays.toString(z[doc])+" \n docs:"+
 //                    Arrays.toString(docs[doc])+" \n nd: "+Arrays.toString(nd[doc]));
             doc++;
         }
     }
 
-    public static void main(String args[]) {
-        String warpStatesFile = "data/warplda/train.z.estimate";
-        String vocabulary = "data/warplda/train.vocab";
+    public static void main(String args[]) throws IOException, InterruptedException {
+
+        String json = args[0];
+        JSONtoWarpLDA json2warp = new JSONtoWarpLDA(json, "train");
+        Process process = new ProcessBuilder("./warplda-master/release/src/format"
+                ,"-input","train", "-prefix", "train").redirectError(new File("err.txt")).start();
+        process.waitFor();
+       
+        process = new ProcessBuilder("./warplda-master/release/src/warplda",
+                "--prefix","train", "--k","200","--niter","300").redirectError(new File("err.txt")).start();
+        process.waitFor();
+        String warpStatesFile = "train.z.estimate";
+        String vocabulary = "train.vocab";
         int K = 100;//Integer.parseInt(args[2]);
         double alpha = 0.01;//Double.parseDouble(args[3]);
         double beta = 0.01;//Double.parseDouble(args[4]);
@@ -107,12 +126,10 @@ public class CGS_pWithWarpLDA {
 //        
 //        System.out.println(Arrays.toString(phi[0]));
 //        System.out.println(Arrays.toString(phi_p[0]));
-        
-        
-        System.out.println("phi + theta (Griffiths Steyvers estimator): "+warp.logLikelihood(phi, theta));
-        System.out.println("phi_p + theta: "+warp.logLikelihood(phi_p, theta));
-        System.out.println("phi + theta_p: "+warp.logLikelihood(phi, theta_p));
-        System.out.println("phi_p + theta_p: "+warp.logLikelihood(phi_p, theta_p));
+        System.out.println("phi + theta (Griffiths Steyvers estimator): " + warp.logLikelihood(phi, theta));
+        System.out.println("phi_p + theta: " + warp.logLikelihood(phi_p, theta));
+        System.out.println("phi + theta_p: " + warp.logLikelihood(phi, theta_p));
+        System.out.println("phi_p + theta_p: " + warp.logLikelihood(phi_p, theta_p));
     }
 
     public List<String> readFile(String file) {

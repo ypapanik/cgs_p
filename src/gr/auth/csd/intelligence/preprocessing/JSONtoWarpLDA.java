@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 /**
  *
  * @author Yannis Papanikolaou <ypapanik@csd.auth.gr>
@@ -31,16 +32,21 @@ public class JSONtoWarpLDA {
     public static void main(String[] args) {
         String json = args[0];
         String warpFile = args[1];
+        JSONtoWarpLDA json2warp = new JSONtoWarpLDA(json, warpFile);
+    }
+
+    public JSONtoWarpLDA(String json, String warpFile) {
         CorpusJSON c = new CorpusJSON(json);
         c.reset();
         Document doc;
         StringBuilder sb = new StringBuilder();
-        
-        
+
         while ((doc = c.nextDocument()) != null) {
             List<String> tokens = doc.getContentAsSentencesOfTokens(true);
             sb.append(doc.getId()).append(" ").append(doc.getId()).append(" ");
-            for(String token:tokens) sb.append(token);
+            for (String token : tokens) {
+                sb.append(token);
+            }
             sb.append("\n");
         }
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(warpFile))) {

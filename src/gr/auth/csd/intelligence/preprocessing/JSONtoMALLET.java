@@ -31,6 +31,10 @@ public class JSONtoMALLET {
     public static void main(String[] args) {
         String json = args[0];
         String mallet = args[1];
+        JSONtoMALLET json2mallet = new JSONtoMALLET(json, mallet);
+    }
+
+    public JSONtoMALLET(String json, String mallet) {
         CorpusJSON c = new CorpusJSON(json);
         c.reset();
         Document doc;
