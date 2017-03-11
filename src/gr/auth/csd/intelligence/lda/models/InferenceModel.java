@@ -1,7 +1,5 @@
-package gr.auth.csd.intelligence.lda.models;
-
-/*
- * Copyright (C) 2016 Yannis Papanikolaou <ypapanik@csd.auth.gr>
+/* 
+ * Copyright (C) 2017
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +14,8 @@ package gr.auth.csd.intelligence.lda.models;
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package gr.auth.csd.intelligence.lda.models;
+
 import gnu.trove.list.array.TIntArrayList;
 import gr.auth.csd.intelligence.lda.Evaluate;
 import gr.auth.csd.intelligence.lda.LDADataset;
