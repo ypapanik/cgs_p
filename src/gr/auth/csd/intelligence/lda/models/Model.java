@@ -377,7 +377,9 @@ public class Model {
         sump = Utils.normalize(sump, 1);
         ndk = Utils.normalize(ndk, 1);
         StringBuilder sb = new StringBuilder();
+        double diff = 0;
         for (int k = 0; k < K; k++) {
+            diff+=sump[k]-ndk[k];
             sb.append(k).append(" ").append(Math.abs(sump[k]-ndk[k])).append("\n");
         }
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(iteration + ".txt"))) {
