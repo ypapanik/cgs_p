@@ -33,7 +33,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
 import gr.auth.csd.intelligence.lda.LDADataset;
-import gr.auth.csd.intelligence.preprocessing.JSONtoWarpLDA;
 import java.io.FileWriter;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
@@ -313,7 +312,7 @@ public class Model {
 
         for (int i = 1; i <= niters; i++) {
             if (i % 50 == 0) {
-                System.out.println(new Date() + " " + i);
+                //System.out.println(new Date() + " " + i);
             }
 
             for (int d = 0; d < M; d++) {
@@ -321,16 +320,17 @@ public class Model {
             }
             //updateParams(false, false);
             Date it = new Date(System.currentTimeMillis());
+            
             //Uncomment to show loglikelihood
             //System.out.println(/*"log-likelihood:" +*/logLikelihood(data, phi, theta));
 
             //uncomment to use for n_dk vs sum(p_djk) plots
-            if (i > nburnin && (i==100 ||i % 200 == 0)) {
+            if (i %10==0) {//> nburnin && (i==55|| i==100 ||i %500 ==0|| i==1000 || i==5000 ||i ==10000)) {
                 double sumdiffs = 0;
                 for(int d = 0; d < M; d++) {
                     sumdiffs+= ndVsSumprobs(i, d);
                 }
-                System.out.println(i+" "+sumdiffs+" "+sumdiffs/M);
+                System.out.println((i+50)+" "+sumdiffs+" "+sumdiffs/M);
             }
         }
         //System.out.println(" finished");
@@ -400,12 +400,12 @@ public class Model {
         double diff = 0;
         for (int k = 0; k < K; k++) {
             diff += Math.abs(sump[k] - ndk[k]);
-            if (d == 0) {
+            if (d == 0&&(iteration == 55|| iteration%100==0)) {
                 sb.append(k).append(" ").append(Math.abs(sump[k] - ndk[k])).append("\n");
             }
         }
         
-        if (d == 0) {
+        if (d == 0&&(iteration == 55|| iteration%200==0)) {
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(iteration + ".txt"))) {
                 bw.append(sb);
                 bw.flush();

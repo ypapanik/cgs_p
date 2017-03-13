@@ -25,6 +25,7 @@ import cc.mallet.pipe.TokenSequenceRemoveStopwords;
 import cc.mallet.pipe.iterator.CsvIterator;
 import cc.mallet.topics.ParallelTopicModel;
 import cc.mallet.types.InstanceList;
+import gr.auth.csd.intelligence.preprocessing.JSONtoMALLET;
 import gr.auth.csd.intelligence.utils.Utils;
 import java.io.File;
 import java.io.FileInputStream;
@@ -129,24 +130,25 @@ public class CGS_pWithMALLET extends CGS_pWithWarpLDA {
         instances.addThruPipe(new CsvIterator(fileReader, Pattern.compile("^(\\S*)[\\s,]*(\\S*)[\\s,]*(.*)$"),
                 3, 2, 1)); // data, label, name fields
         int numTopics = 100;
-        ParallelTopicModel model = new ParallelTopicModel(numTopics, 1.0, 0.01);
+        ParallelTopicModel model = new ParallelTopicModel(numTopics, 10.0, 0.01);
 
         model.addInstances(instances);
         model.setNumThreads(4);
-        model.setNumIterations(200);
+        model.setNumIterations(100);
         model.estimate();
         model.printState(new File(outputState));
     }
 
     public static void main(String[] args) {
 
+        JSONtoMALLET json2mallet = new JSONtoMALLET(args[0], "train.txt");
         try {
-            runMallet("data/mallet/ap.txt", "data/mallet/output.txt.gz");
+            runMallet("train.txt", "output.txt.gz");
         } catch (IOException ex) {
             Logger.getLogger(CGS_pWithMALLET.class.getName()).log(Level.SEVERE, null, ex);
         }
         //cgs_p
-        CGS_pWithMALLET mallet = new CGS_pWithMALLET("data/mallet/output.txt.gz");
+        CGS_pWithMALLET mallet = new CGS_pWithMALLET("output.txt.gz");
         double[][] theta = mallet.computeTheta();
         double[][] theta_p = mallet.computeTheta_p();
         double[][] phi = mallet.computePhi();
