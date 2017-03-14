@@ -1,5 +1,4 @@
 /* 
- * Copyright (C) 2017
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +15,7 @@
  */
 package de.bwaldvogel.liblinear;
 
-import gr.auth.csd.intelligence.preprocessing.Dictionary;
+import gr.auth.csd.intelligence.cgsp.preprocessing.Dictionary;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -24,14 +23,30 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author anithagenilos
+ * 
+ * @author Yannis Papanikolaou
  */
 public class ProblemGr extends Problem {
+
+    /**
+     *
+     * @param file
+     * @param bias
+     * @param nr_features
+     * @return
+     * @throws IOException
+     * @throws InvalidInputDataException
+     */
     public static ProblemGr readFromFile(File file, double bias, int nr_features) throws IOException, InvalidInputDataException {
         return TrainGr.readProblem(file, bias, nr_features);
     }
     
+    /**
+     *
+     * @param libsvmTestFile
+     * @param dictionary
+     * @return
+     */
     public static ProblemGr readProblem(String libsvmTestFile, Dictionary dictionary) {
         ProblemGr testProblem = null;
         try {

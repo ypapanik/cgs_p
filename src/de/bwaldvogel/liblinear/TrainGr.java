@@ -1,5 +1,4 @@
 /* 
- * Copyright (C) 2017
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +28,7 @@ import static de.bwaldvogel.liblinear.Linear.atoi;
 
 /**
  *
- * @author anithagenilos
+ * @author Yannis Papanikolaou
  */
 public class TrainGr extends Train {
     private static ProblemGr constructProblem(List<Double> vy, List<Feature[]> vx, int max_index, double bias) {
@@ -59,6 +58,9 @@ public class TrainGr extends Train {
         /**
      * reads a problem from LibSVM format
      * @param file the SVM file
+     * @param bias
+     * @param max_index
+     * @return 
      * @throws IOException obviously in case of any I/O exception ;)
      * @throws InvalidInputDataException if the input file is not correctly formatted
      */
