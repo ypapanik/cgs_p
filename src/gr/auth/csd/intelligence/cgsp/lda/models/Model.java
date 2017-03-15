@@ -585,12 +585,29 @@ public class Model {
      * approximation of eq.47 holds. The idea here is to explicitly compute the
      * left and right hands of the equation. The relevant expected values are
      * computed as E[X] = \sum (pi*xi)
-    *
+     *
      */
-    private double testPhi_pApproximation() {
+    private double testPhi_pApproximation(int D) {
         double[][][] probability = new double[M][][];
         double[][][] phi_hops = new double[M][][];
-        for (int d = 0; d < M; d++) {
+        double nw[][] = new double[K][V];
+        double nwsum[] = new double[K];
+        double nd[][] = new double[D][K];
+        
+        for(int d=0;d<D;d++) {
+            int docLength = data.getDocs().get(d).getWords().size();
+             for (int w = 0; w < docLength; w++) {
+                 int word = data.getDocs().get(d).getWords().get(w);
+                int k = z[d][w];
+                 nd[d][k]++;
+                if (!inference) {
+                    nw[k][word]++;
+                    nwsum[k]++;
+             }
+        }
+        
+        
+        for (int d = 0; d < D; d++) {
             int docLength = data.getDocs().get(d).getWords().size();
             probability[d] = new double[docLength][K];
             phi_hops[d] = new double[docLength][K];
@@ -611,20 +628,46 @@ public class Model {
                 probability[d][w] = Utils.normalize(probability[d][w], 1.0);
 
                 for (int k = 0; k < K; k++) {
-                    
-                    //the next six lines perform the hop
+
+                    //the next six lines perform the hop from topic to all possible k
                     nw[topic][word]--;
-                    nd[d][topic]--;
                     nwsum[topic]--;
-                    
                     nw[k][word]++;
-                    nd[d][k]++;
                     nwsum[k]++;
+
                     phi_hops[d][w][k] = (nw[k][word] + beta) / (nwsum[k] + V * beta);
 
+                    nw[topic][word]++;
+                    nwsum[topic]++;
+                    nw[k][word]--;
+                    nwsum[k]--;
                 }
-
+                phi_hops[d][w] = Utils.normalize(phi_hops[d][w], 1.0);
             }
         }
+
+        //Calculate the expeted values
+        double[][] Expleft = new double[K][V];
+        double[][] Expright = new double[K][V];
+        for (int d = 0; d < M; d++) {
+            int docLength = data.getDocs().get(d).getWords().size();
+            for (int w = 0; w < docLength; w++) {
+                int word = data.getDocs().get(d).getWords().get(w);
+                for (int k = 0; k < K; k++) {
+                    Expright[k][word] += probability[d][w][k];
+                    Expleft[k][word] += probability[d][w][k] * phi_hops[d][w][k];
+                }
+            }
+        }
+        for (int k = 0; k < K; k++) {
+            //add beta hyperparameter
+            for (int w = 0; w < V; w++) {
+                Expright[k][w] = Expright[k][w] + beta;
+            }
+            //normalize
+            Expright[k] = Utils.normalize(Expright[k], 1.0);
+            Expleft[k] = Utils.normalize(Expleft[k], 1.0);
+        }
     }
+
 }
