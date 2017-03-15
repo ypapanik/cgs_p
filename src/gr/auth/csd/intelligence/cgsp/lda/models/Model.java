@@ -477,17 +477,16 @@ public class Model {
             }
             //updateParams(false, false);
             Date it = new Date(System.currentTimeMillis());
-            
+
             //Uncomment to show loglikelihood
             //System.out.println(/*"log-likelihood:" +*/logLikelihood(data, phi, theta));
-
             //uncomment to use for n_dk vs sum(p_djk) plots
-            if (i %10==0) {
+            if (i % 10 == 0) {
                 double sumdiffs = 0;
-                for(int d = 0; d < M; d++) {
-                    sumdiffs+= ndVsSumprobs(i, d);
+                for (int d = 0; d < M; d++) {
+                    sumdiffs += ndVsSumprobs(i, d);
                 }
-                System.out.println(i+" "+sumdiffs+" "+sumdiffs/M);
+                System.out.println(i + " " + sumdiffs + " " + sumdiffs / M);
             }
         }
         //System.out.println(" finished");
@@ -564,12 +563,12 @@ public class Model {
         double diff = 0;
         for (int k = 0; k < K; k++) {
             diff += Math.abs(sump[k] - ndk[k]);
-            if (d == 0&&(iteration == 50|| iteration%100==0)) {
+            if (d == 0 && (iteration == 50 || iteration % 100 == 0)) {
                 sb.append(k).append(" ").append(Math.abs(sump[k] - ndk[k])).append("\n");
             }
         }
-        
-        if (d == 0&&(iteration == 55|| iteration%200==0)) {
+
+        if (d == 0 && (iteration == 55 || iteration % 200 == 0)) {
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(iteration + ".txt"))) {
                 bw.append(sb);
                 bw.flush();
@@ -579,5 +578,53 @@ public class Model {
             }
         }
         return diff;
+    }
+
+    /**
+     * This method performs the experiment of section 5.4, testing if the
+     * approximation of eq.47 holds. The idea here is to explicitly compute the
+     * left and right hands of the equation. The relevant expected values are
+     * computed as E[X] = \sum (pi*xi)
+    *
+     */
+    private double testPhi_pApproximation() {
+        double[][][] probability = new double[M][][];
+        double[][][] phi_hops = new double[M][][];
+        for (int d = 0; d < M; d++) {
+            int docLength = data.getDocs().get(d).getWords().size();
+            probability[d] = new double[docLength][K];
+            phi_hops[d] = new double[docLength][K];
+            for (int w = 0; w < docLength; w++) {
+                int word = data.getDocs().get(d).getWords().get(w);
+                int topic = z[d][w];
+                nw[topic][word]--;
+                nd[d][topic]--;
+                nwsum[topic]--;
+                for (int k = 0; k < K; k++) {
+                    double prob = (nw[k][word] + beta) * (nd[d][k] + alpha[k]) / (nwsum[k] + betaSum);
+                    probability[d][w][k] = prob;
+                }
+                nw[topic][word]++;
+                nd[d][topic]++;
+                nwsum[topic]++;
+
+                probability[d][w] = Utils.normalize(probability[d][w], 1.0);
+
+                for (int k = 0; k < K; k++) {
+                    
+                    //the next six lines perform the hop
+                    nw[topic][word]--;
+                    nd[d][topic]--;
+                    nwsum[topic]--;
+                    
+                    nw[k][word]++;
+                    nd[d][k]++;
+                    nwsum[k]++;
+                    phi_hops[d][w][k] = (nw[k][word] + beta) / (nwsum[k] + V * beta);
+
+                }
+
+            }
+        }
     }
 }
