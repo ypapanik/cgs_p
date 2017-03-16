@@ -73,7 +73,7 @@ public class CGS_pPriorModel extends PriorModel {
                 for (int k = 0; k < K; k++) {
                     //average over samples
                     theta[m][k] /= numSamples;
-                    theta[m][k] += alpha[k];
+                    //theta[m][k] += alpha[k];
                 }
                 //average over Nd and Sum_alpha
                 theta[m] = Utils.normalize(theta[m], 1.0);

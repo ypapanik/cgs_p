@@ -29,7 +29,7 @@ import java.io.File;
  * 
  * @author Yannis Papanikolaou <ypapanik@csd.auth.gr>
  */
-public class ExperimentSection5_6 {
+public class ExperimentSection5_4 {
 
     /**
      *
@@ -37,8 +37,8 @@ public class ExperimentSection5_6 {
      */
     public static void main(String args[]) {
         LDACmdOption option = new LDACmdOption(args);
-        option.trainingFile = "reutersTrain";
-        option.testFile = "reutersTest";
+//        option.trainingFile = "reutersTrain";
+//        option.testFile = "reutersTest";
         int[] K = {20, 50, 100, 200, 300, 500};
         for (int t : K) {
             System.out.print(t + " ");

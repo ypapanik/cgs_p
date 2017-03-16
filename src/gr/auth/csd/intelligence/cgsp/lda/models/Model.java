@@ -486,11 +486,11 @@ public class Model {
         }
 
         //Uncomment for the phi_p approximation experiment
-        for (int d = 1; d <= M; d++) {
-        if (d % 100 == 0) 
-        System.out.println(d + " " + this.testPhi_pApproximation(d));
-
-        }
+//        for (int d = 1; d <= M; d++) {
+//        if (d % 100 == 0) 
+//        System.out.println(d + " " + this.testPhi_pApproximation(d));
+//
+//        }
         updateParams(false, true);
         if (save) {
             save(modelName, 10);
