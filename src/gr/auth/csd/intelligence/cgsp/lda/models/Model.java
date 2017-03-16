@@ -464,9 +464,6 @@ public class Model {
     public double[][] estimate(boolean save) {
         initialize();
         //System.out.println("Sampling " + niters + " iterations");
-
-        Date begin = new Date(System.currentTimeMillis());
-
         for (int i = 1; i <= niters; i++) {
             if (i % 50 == 0) {
                 //System.out.println(new Date() + " " + i);
@@ -475,21 +472,25 @@ public class Model {
             for (int d = 0; d < M; d++) {
                 update(d);
             }
-            //updateParams(false, false);
-            Date it = new Date(System.currentTimeMillis());
 
             //Uncomment to show loglikelihood
             //System.out.println(/*"log-likelihood:" +*/logLikelihood(data, phi, theta));
             //uncomment to use for n_dk vs sum(p_djk) plots
-            if (i % 10 == 0) {
-                double sumdiffs = 0;
-                for (int d = 0; d < M; d++) {
-                    sumdiffs += ndVsSumprobs(i, d);
-                }
-                System.out.println(i + " " + sumdiffs + " " + sumdiffs / M);
-            }
+//            if (i % 10 == 0) {
+//                double sumdiffs = 0;
+//                for (int d = 0; d < M; d++) {
+//                    sumdiffs += ndVsSumprobs(i, d);
+//                }
+//                System.out.println(i + " " + sumdiffs + " " + sumdiffs / M);
+//            }
         }
-        //System.out.println(" finished");
+
+        //Uncomment for the phi_p approximation experiment
+        for (int d = 1; d <= M; d++) {
+        if (d % 100 == 0) 
+        System.out.println(d + " " + this.testPhi_pApproximation(d));
+
+        }
         updateParams(false, true);
         if (save) {
             save(modelName, 10);
@@ -568,7 +569,7 @@ public class Model {
             }
         }
 
-        if (d == 0 && (iteration == 55 || iteration % 200 == 0)) {
+        if (d == 0 && (iteration == 50 || iteration % 100 == 0)) {
             try (BufferedWriter bw = new BufferedWriter(new FileWriter(iteration + ".txt"))) {
                 bw.append(sb);
                 bw.flush();
@@ -593,20 +594,18 @@ public class Model {
         double nw[][] = new double[K][V];
         double nwsum[] = new double[K];
         double nd[][] = new double[D][K];
-        
-        for(int d=0;d<D;d++) {
+
+        for (int d = 0; d < D; d++) {
             int docLength = data.getDocs().get(d).getWords().size();
-             for (int w = 0; w < docLength; w++) {
-                 int word = data.getDocs().get(d).getWords().get(w);
+            for (int w = 0; w < docLength; w++) {
+                int word = data.getDocs().get(d).getWords().get(w);
                 int k = z[d][w];
-                 nd[d][k]++;
-                if (!inference) {
-                    nw[k][word]++;
-                    nwsum[k]++;
-             }
+                nd[d][k]++;
+                nw[k][word]++;
+                nwsum[k]++;
+            }
         }
-        
-        
+
         for (int d = 0; d < D; d++) {
             int docLength = data.getDocs().get(d).getWords().size();
             probability[d] = new double[docLength][K];
@@ -635,7 +634,7 @@ public class Model {
                     nw[k][word]++;
                     nwsum[k]++;
 
-                    phi_hops[d][w][k] = (nw[k][word] + beta) / (nwsum[k] + V * beta);
+                    phi_hops[d][w][k] = (nw[k][word] + beta) / (nwsum[k] + betaSum);
 
                     nw[topic][word]++;
                     nwsum[topic]++;
@@ -646,28 +645,62 @@ public class Model {
             }
         }
 
-        //Calculate the expeted values
+        //Calculate the expected values
         double[][] Expleft = new double[K][V];
         double[][] Expright = new double[K][V];
-        for (int d = 0; d < M; d++) {
+        for (int d = 0; d < D; d++) {
             int docLength = data.getDocs().get(d).getWords().size();
             for (int w = 0; w < docLength; w++) {
                 int word = data.getDocs().get(d).getWords().get(w);
                 for (int k = 0; k < K; k++) {
+
                     Expright[k][word] += probability[d][w][k];
-                    Expleft[k][word] += probability[d][w][k] * phi_hops[d][w][k];
+                    Expleft[k][word] +=  phi_hops[d][w][k];
                 }
             }
         }
+
         for (int k = 0; k < K; k++) {
-            //add beta hyperparameter
             for (int w = 0; w < V; w++) {
-                Expright[k][w] = Expright[k][w] + beta;
+                //quick hack when dealing with D<M
+                if(Expright[k][w]!=0) 
+                    Expright[k][w] = Expright[k][w] + beta;
             }
             //normalize
             Expright[k] = Utils.normalize(Expright[k], 1.0);
             Expleft[k] = Utils.normalize(Expleft[k], 1.0);
         }
-    }
 
+        StringBuilder sb = new StringBuilder();
+        StringBuilder sb2 = new StringBuilder();
+        double diff = 0;
+        for (int k = 0; k < K; k++) {
+            for (int w = 0; w < V; w++) {
+                diff += Math.abs(Expright[k][w] - Expleft[k][w]);
+                sb.append(Expleft[k][w]).append(" ");
+                sb2.append(Expright[k][w]).append(" ");
+//                if (k == 0&&(Expleft[k][w]!=0||Expright[k][w]!=0)) {
+//                    System.out.println(w+" "+ Expleft[0][w]+" "+ Expright[0][w]);
+//                }
+            }
+            sb.append("\n");
+            sb2.append("\n");
+        }
+        //if (D == M) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("picLeft.txt"))) {
+            bw.append(sb);
+            bw.flush();
+        } catch (IOException ex) {
+            Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("picRight.txt"))) {
+            bw.append(sb2);
+            bw.flush();
+        } catch (IOException ex) {
+            Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        // }
+        return diff / V;
+    }
 }

@@ -37,9 +37,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -734,5 +736,14 @@ public class Utils {
             ex.printStackTrace();
         }
     }
+
+public static String toSignificantFiguresString(BigDecimal bd){
+    String test = String.format("%."+3+"G", bd);
+    if (test.contains("E+")){
+        test = String.format(Locale.US, "%.0f", Double.valueOf(String.format("%."+3+"G", bd)));
+    }
+    return test;
+}
+
 
 }

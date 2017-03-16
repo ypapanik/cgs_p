@@ -32,8 +32,8 @@ public class ExperimentSection5_7 {
     public static void main(String args[]) {
         LDACmdOption option = new LDACmdOption(args);
         //option.trainingFile = "data/reutersTrain";
-        option.K =100;
-        option.niters = 1000;
+        option.K =20;
+        option.niters = 50;
         option.alpha = 0.1;
         //option.method = "conv";
         option.method = "std";
