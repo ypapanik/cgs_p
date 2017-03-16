@@ -687,18 +687,18 @@ public class Model {
             sb2.append("\n");
         }
         //if (D == M) {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter("picLeft.txt"))) {
-            bw.append(sb);
-            bw.flush();
-        } catch (IOException ex) {
-            Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter("picRight.txt"))) {
-            bw.append(sb2);
-            bw.flush();
-        } catch (IOException ex) {
-            Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, ex);
-        }
+//        try (BufferedWriter bw = new BufferedWriter(new FileWriter("picLeft.txt"))) {
+//            bw.append(sb);
+//            bw.flush();
+//        } catch (IOException ex) {
+//            Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        try (BufferedWriter bw = new BufferedWriter(new FileWriter("picRight.txt"))) {
+//            bw.append(sb2);
+//            bw.flush();
+//        } catch (IOException ex) {
+//            Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, ex);
+//        }
 
         // }
         return diff / V;
