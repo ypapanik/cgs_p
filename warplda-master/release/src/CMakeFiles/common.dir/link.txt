@@ -1,0 +1,2 @@
+/usr/bin/ar qc libcommon.a  CMakeFiles/common.dir/Bigraph.cpp.o CMakeFiles/common.dir/AdjList.cpp.o CMakeFiles/common.dir/Vocab.cpp.o CMakeFiles/common.dir/NumaArray.cpp.o CMakeFiles/common.dir/clock.cpp.o
+/usr/bin/ranlib libcommon.a

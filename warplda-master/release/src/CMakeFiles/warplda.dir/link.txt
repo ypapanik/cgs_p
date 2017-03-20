@@ -1,0 +1,1 @@
+/usr/bin/c++   -march=native -std=c++1y -Wall -g  -fopenmp -O3 -DNDEBUG    CMakeFiles/warplda.dir/main.cpp.o CMakeFiles/warplda.dir/lda.cpp.o CMakeFiles/warplda.dir/warplda.cpp.o  -o warplda -rdynamic libcommon.a ../gflags/libgflags_nothreads.a -lnuma 

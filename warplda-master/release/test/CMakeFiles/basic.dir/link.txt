@@ -1,0 +1,1 @@
+/usr/bin/c++   -march=native -std=c++1y -Wall -g  -fopenmp -O3 -DNDEBUG    CMakeFiles/basic.dir/basic.cpp.o  -o basic -rdynamic -lpthread 
