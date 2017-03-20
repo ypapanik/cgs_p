@@ -77,7 +77,7 @@ public class CGS_pWithWarpLDA {
         documents = readFile(warpStatesFile);
         D = documents.size();
         V = readFile(vocabulary).size();
-        //System.out.println("K="+K+" V="+V+" D="+D);
+        System.out.println("K="+K+" V="+V+" D="+D);
         nw = new double[K][V];
         nd = new double[D][K];
         nwsum = new double[K];
@@ -129,9 +129,11 @@ public class CGS_pWithWarpLDA {
     public static void main(String args[]) throws IOException, InterruptedException {
 
         String json = args[0];
-        int K = 100;//Integer.parseInt(args[2]);
+        int K = 5000;//Integer.parseInt(args[2]);
         double alpha = 0.1;//Double.parseDouble(args[3]);
         double beta = 0.01;//Double.parseDouble(args[4]);
+        long startTime = System.currentTimeMillis();
+        
         JSONtoWarpLDA json2warp = new JSONtoWarpLDA(json, "train");
         Process process = new ProcessBuilder("./warplda-master/release/src/format"
                 ,"-input","train", "-prefix", "train").redirectError(new File("err.txt")).start();
@@ -142,26 +144,31 @@ public class CGS_pWithWarpLDA {
         process.waitFor();
         String warpStatesFile = "train.z.estimate";
         String vocabulary = "train.vocab";
-
+        long runningTime   = System.currentTimeMillis();
         CGS_pWithWarpLDA warp = new CGS_pWithWarpLDA(K, alpha, beta, warpStatesFile, vocabulary);
         warp.calculateCounters();
+        long calccountersTime   = System.currentTimeMillis();
         double[][] theta = warp.computeTheta();
+        long thetaTime   = System.currentTimeMillis();
         double[][] theta_p = warp.computeTheta_p();
+        long theta_pTime   = System.currentTimeMillis();
         double[][] phi = warp.computePhi();
+        long phiTime   = System.currentTimeMillis();
         double[][] phi_p = warp.computePhi_p();
-
-//        System.out.println(Arrays.toString(theta[0]));
-//        System.out.println(Arrays.toString(theta_p[0]));
-//        
-//        System.out.println(Arrays.toString(phi[0]));
-//        System.out.println(Arrays.toString(phi_p[0]));
-
-        //int totalTokens = 0;
-        //for(int[] doc:warp.docs) totalTokens+=doc.length;
+        long phi_pTime   = System.currentTimeMillis();
         System.out.println("phi + theta (Griffiths Steyvers estimator): " + warp.logLikelihood(phi, theta));
         System.out.println("phi_p + theta: " + warp.logLikelihood(phi_p, theta));
         System.out.println("phi + theta_p: " + warp.logLikelihood(phi, theta_p));
         System.out.println("phi_p + theta_p: " + warp.logLikelihood(phi_p, theta_p));
+        
+        System.out.println("Time:");
+        System.out.println("Running WarpLDA:"+(runningTime - startTime));
+        System.out.println("Calculating counters:"+(calccountersTime - startTime));
+        System.out.println("Calculating theta:"+(thetaTime - startTime));
+        System.out.println("Calculating theta_p:"+(theta_pTime - startTime));
+        System.out.println("Calculating phi:"+(phiTime - startTime));
+        System.out.println("Calculating phi_p:"+(phi_pTime - startTime));
+        
     }
 
     /**
