@@ -130,7 +130,7 @@ public class CGS_pWithWarpLDA {
 
         String json = args[0];
         int iter = Integer.parseInt(args[1]);
-        int K = 100;//Integer.parseInt(args[2]);
+        int K = 1000;//Integer.parseInt(args[2]);
         double alpha = 0.1;//Double.parseDouble(args[3]);
         double beta = 0.01;//Double.parseDouble(args[4]);
         long startTime = System.currentTimeMillis();
@@ -140,7 +140,7 @@ public class CGS_pWithWarpLDA {
         process.waitFor();
 
         process = new ProcessBuilder("./warplda-master/release/src/warplda",
-                "--prefix", "train", "--k", K + "", "--niter", iter + "", "-alpha", K * alpha + "").inheritIO().start();
+                "--prefix", "train", "--k", K + "", "--niter", iter + "", "-alpha", K * alpha + "").redirectOutput(new File("err.txt")).start();
         process.waitFor();
         String warpStatesFile = "train.z.estimate";
         String vocabulary = "train.vocab";
