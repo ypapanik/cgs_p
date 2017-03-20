@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 /**
  * Example to show how a trained WarpLDA model can be used to compute \theta_p
  * and \phi_p.
- * 
+ *
  * * @author Yannis Papanikolaou <ypapanik@csd.auth.gr>
  */
 public class CGS_pWithWarpLDA {
@@ -77,7 +77,7 @@ public class CGS_pWithWarpLDA {
         documents = readFile(warpStatesFile);
         D = documents.size();
         V = readFile(vocabulary).size();
-        System.out.println("K="+K+" V="+V+" D="+D);
+        System.out.println("K=" + K + " V=" + V + " D=" + D);
         nw = new double[K][V];
         nd = new double[D][K];
         nwsum = new double[K];
@@ -129,46 +129,56 @@ public class CGS_pWithWarpLDA {
     public static void main(String args[]) throws IOException, InterruptedException {
 
         String json = args[0];
-        int K = 5000;//Integer.parseInt(args[2]);
+        int iter = Integer.parseInt(args[1]);
+        int K = 100;//Integer.parseInt(args[2]);
         double alpha = 0.1;//Double.parseDouble(args[3]);
         double beta = 0.01;//Double.parseDouble(args[4]);
         long startTime = System.currentTimeMillis();
-        
+
         JSONtoWarpLDA json2warp = new JSONtoWarpLDA(json, "train");
-        Process process = new ProcessBuilder("./warplda-master/release/src/format"
-                ,"-input","train", "-prefix", "train").redirectError(new File("err.txt")).start();
+        Process process = new ProcessBuilder("./warplda-master/release/src/format", "-input", "train", "-prefix", "train").inheritIO().start();
         process.waitFor();
-       
+
         process = new ProcessBuilder("./warplda-master/release/src/warplda",
-                "--prefix","train", "--k",K+"","--niter","100", "-alpha",K*alpha+"").redirectError(new File("err.txt")).start();
+                "--prefix", "train", "--k", K + "", "--niter", iter + "", "-alpha", K * alpha + "").inheritIO().start();
         process.waitFor();
         String warpStatesFile = "train.z.estimate";
         String vocabulary = "train.vocab";
-        long runningTime   = System.currentTimeMillis();
+        long runningTime = System.currentTimeMillis();
+        long a = runningTime - startTime;
+        System.out.println("Running WarpLDA duration:" + a);
         CGS_pWithWarpLDA warp = new CGS_pWithWarpLDA(K, alpha, beta, warpStatesFile, vocabulary);
         warp.calculateCounters();
-        long calccountersTime   = System.currentTimeMillis();
+        long calccountersTime = System.currentTimeMillis();
+        long b = calccountersTime - runningTime;
+        System.out.println("Calculating counters duration:" + b);
         double[][] theta = warp.computeTheta();
-        long thetaTime   = System.currentTimeMillis();
+        long thetaTime = System.currentTimeMillis();
+        long c = thetaTime - calccountersTime;
+        System.out.println("Calculating theta duration:" + c);
         double[][] theta_p = warp.computeTheta_p();
-        long theta_pTime   = System.currentTimeMillis();
+        long theta_pTime = System.currentTimeMillis();
+        long d = theta_pTime - thetaTime;
+        System.out.println("Calculating theta_p duration:" + d);
         double[][] phi = warp.computePhi();
-        long phiTime   = System.currentTimeMillis();
+        long phiTime = System.currentTimeMillis();
+        long e = (phiTime - theta_pTime);
+        System.out.println("Calculating phi duration:" + e);
         double[][] phi_p = warp.computePhi_p();
-        long phi_pTime   = System.currentTimeMillis();
-        System.out.println("phi + theta (Griffiths Steyvers estimator): " + warp.logLikelihood(phi, theta));
-        System.out.println("phi_p + theta: " + warp.logLikelihood(phi_p, theta));
-        System.out.println("phi + theta_p: " + warp.logLikelihood(phi, theta_p));
-        System.out.println("phi_p + theta_p: " + warp.logLikelihood(phi_p, theta_p));
-        
-        System.out.println("Time:");
-        System.out.println("Running WarpLDA:"+(runningTime - startTime));
-        System.out.println("Calculating counters:"+(calccountersTime - startTime));
-        System.out.println("Calculating theta:"+(thetaTime - startTime));
-        System.out.println("Calculating theta_p:"+(theta_pTime - startTime));
-        System.out.println("Calculating phi:"+(phiTime - startTime));
-        System.out.println("Calculating phi_p:"+(phi_pTime - startTime));
-        
+        long phi_pTime = System.currentTimeMillis();
+        long f = phi_pTime - phiTime;
+        System.out.println("Calculating phi_p duration:" + f);
+
+//        System.out.println("phi + theta (Griffiths Steyvers estimator): " + warp.logLikelihood(phi, theta));
+//        System.out.println("phi_p + theta: " + warp.logLikelihood(phi_p, theta));
+//        System.out.println("phi + theta_p: " + warp.logLikelihood(phi, theta_p));
+//        System.out.println("phi_p + theta_p: " + warp.logLikelihood(phi_p, theta_p));
+
+        System.out.println((a+c+e)+" " + warp.logLikelihood(phi, theta));
+        System.out.println((a+c+f)+" " + warp.logLikelihood(phi_p, theta));
+        System.out.println((a+d+e)+ " " + warp.logLikelihood(phi, theta_p));
+        System.out.println((a+d+f)+" " + warp.logLikelihood(phi_p, theta_p));
+
     }
 
     /**
