@@ -15,6 +15,8 @@
  */
 package gr.auth.csd.intelligence.cgsp.experiments;
 
+import gnu.trove.iterator.TIntIntIterator;
+import gnu.trove.map.hash.TIntIntHashMap;
 import gr.auth.csd.intelligence.cgsp.preprocessing.JSONtoWarpLDA;
 import gr.auth.csd.intelligence.cgsp.utils.Utils;
 import java.io.File;
@@ -44,17 +46,8 @@ public class CGS_pWithWarpLDA {
     double nw[][];
     double nd[][];
     double nwsum[];
-    int z[][];
-
-    /**
-     *
-     */
+    protected TIntIntHashMap documentWordFrequencies[];
     protected List<String> documents;
-
-    /**
-     *
-     */
-    protected int docs[][];
 
     /**
      *
@@ -81,17 +74,10 @@ public class CGS_pWithWarpLDA {
         nw = new double[K][V];
         nd = new double[D][K];
         nwsum = new double[K];
-        z = new int[D][];
-        docs = new int[D][];
+        documentWordFrequencies = new TIntIntHashMap[D];
     }
 
-    /**
-     *
-     * @return
-     */
-    public int[][] getDocs() {
-        return docs;
-    }
+
 
     /**
      *
@@ -101,8 +87,8 @@ public class CGS_pWithWarpLDA {
         for (String document : documents) {
             String[] tokens = document.split(" ");
             int docLength = Integer.parseInt(tokens[0]);
-            z[doc] = new int[docLength];
-            docs[doc] = new int[docLength];
+            //z[doc] = new int[docLength];
+            documentWordFrequencies[doc] = new TIntIntHashMap();
             for (int i = 1; i < tokens.length; i++) {
                 String[] assignment = tokens[i].split(":");
                 int wordType = Integer.parseInt(assignment[0]);
@@ -110,8 +96,7 @@ public class CGS_pWithWarpLDA {
                 nw[topic][wordType]++;
                 nd[doc][topic]++;
                 nwsum[topic]++;
-                z[doc][i - 1] = topic;
-                docs[doc][i - 1] = wordType;
+                documentWordFrequencies[doc].adjustOrPutValue(wordType, 1, 1);
             }
 
 //            System.out.println(document+" \n z:"+Arrays.toString(z[doc])+" \n docs:"+
@@ -174,9 +159,9 @@ public class CGS_pWithWarpLDA {
 //        System.out.println("phi + theta_p: " + warp.logLikelihood(phi, theta_p));
 //        System.out.println("phi_p + theta_p: " + warp.logLikelihood(phi_p, theta_p));
 
-        System.out.println((a+c+e)+" " + warp.logLikelihood(phi, theta));
-        System.out.println((a+c+f)+" " + warp.logLikelihood(phi_p, theta));
-        System.out.println((a+d+e)+ " " + warp.logLikelihood(phi, theta_p));
+        System.out.print((a+c+e)+" " + warp.logLikelihood(phi, theta)+" ");
+        System.out.print((a+c+f)+" " + warp.logLikelihood(phi_p, theta)+" ");
+        System.out.print((a+d+e)+ " " + warp.logLikelihood(phi, theta_p)+" ");
         System.out.println((a+d+f)+" " + warp.logLikelihood(phi_p, theta_p));
 
     }
@@ -220,19 +205,18 @@ public class CGS_pWithWarpLDA {
         double[][] theta_p = new double[D][K];
         for (int d = 0; d < D; d++) {
             double[] p = new double[K];
-            for (int w = 0; w < docs[d].length; w++) {
-                int word = docs[d][w];
-                int topic = z[d][w];
-                nd[d][topic]--;
+            TIntIntIterator it = documentWordFrequencies[d].iterator();
+            while(it.hasNext()) {
+                it.advance();
+                int word = it.key();
                 for (int k = 0; k < K; k++) {
                     p[k] = (alpha + nd[d][k]) * (nw[k][word] + beta) / (nwsum[k] + V * beta);
                 }
-                nd[d][topic]++;
                 //average sampling probabilities
                 p = Utils.normalize(p, 1);
 
                 for (int k = 0; k < K; k++) {
-                    theta_p[d][k] += p[k];
+                    theta_p[d][k] += p[k]*it.value();
                 }
             }
 
@@ -269,18 +253,17 @@ public class CGS_pWithWarpLDA {
         double[][] phi_p = new double[K][V];
         for (int d = 0; d < D; d++) {
             double[] p = new double[K];
-            for (int w = 0; w < docs[d].length; w++) {
-                int word = docs[d][w];
-                int topic = z[d][w];
-                nd[d][topic]--;
+            TIntIntIterator it = documentWordFrequencies[d].iterator();
+            while(it.hasNext()) {
+                it.advance();
+                int word = it.key();
                 for (int k = 0; k < K; k++) {
                     p[k] = (nw[k][word] + beta) * (nd[d][k] + alpha) / (nwsum[k] + V * beta);
                 }
-                nd[d][topic]++;
                 //average sampling probabilities
                 p = Utils.normalize(p, 1);
                 for (int k = 0; k < K; k++) {
-                    phi_p[k][word] += p[k];
+                    phi_p[k][word] += p[k]*it.value();
                 }
             }
         }
@@ -303,9 +286,11 @@ public class CGS_pWithWarpLDA {
      */
     public double logLikelihood(double phi[][], double[][] theta) {
         double ll = 0;
-        for (int d = 0; d < docs.length; d++) {
-            for (int w = 0; w < docs[d].length; w++) {
-                int word = docs[d][w];
+        for (int d = 0; d < D; d++) {
+            TIntIntIterator it = documentWordFrequencies[d].iterator();
+            while(it.hasNext()) {
+                it.advance();
+                int word = it.key();
                 double l = 0;
                 for (int k = 0; k < K; k++) {
                     if (phi[k][word] != 0 && theta[d][k] != 0) {
