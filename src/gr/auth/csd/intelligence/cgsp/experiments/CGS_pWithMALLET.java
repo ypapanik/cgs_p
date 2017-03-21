@@ -24,7 +24,6 @@ import cc.mallet.pipe.TokenSequenceRemoveStopwords;
 import cc.mallet.pipe.iterator.CsvIterator;
 import cc.mallet.topics.ParallelTopicModel;
 import cc.mallet.types.InstanceList;
-import gnu.trove.map.hash.TIntIntHashMap;
 import gr.auth.csd.intelligence.cgsp.preprocessing.JSONtoMALLET;
 import gr.auth.csd.intelligence.cgsp.utils.Utils;
 import java.io.File;
@@ -101,9 +100,11 @@ public class CGS_pWithMALLET extends CGS_pWithWarpLDA {
         nw = new double[K][V];
         nd = new double[D][K];
         nwsum = new double[K];
-        documentWordFrequencies = new TIntIntHashMap[D];
+        z = new int[D][];
+        docs = new int[D][];
         for (int d = 0; d < D; d++) {
-            documentWordFrequencies[d] = new TIntIntHashMap();
+            z[d] = new int[zeta.get(d).size()];
+            docs[d] = new int[documents.get(d).size()];
         }
 
         for (int i = 3; i < lines.size(); i++) {
@@ -116,7 +117,8 @@ public class CGS_pWithMALLET extends CGS_pWithWarpLDA {
             nw[topic][wordType]++;
             nd[doc][topic]++;
             nwsum[topic]++;
-            documentWordFrequencies[doc].adjustOrPutValue(wordType, 1, 1);
+            z[doc][pos] = topic;
+            docs[doc][pos] = wordType;
         }
     }
 
