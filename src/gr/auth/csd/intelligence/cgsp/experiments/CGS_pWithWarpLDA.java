@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -54,6 +55,8 @@ public class CGS_pWithWarpLDA {
     protected int docs[][];
     private double[][] theta_p;
     private double[][] phi_p;
+    protected double[] prob;
+    private double betaSum;
 
     /**
      *
@@ -73,6 +76,7 @@ public class CGS_pWithWarpLDA {
         this.K = K;
         this.alpha = alpha;
         this.beta = beta;
+        betaSum = beta * V;
         documents = readFile(warpStatesFile);
         D = documents.size();
         V = readFile(vocabulary).size();
@@ -280,19 +284,16 @@ public class CGS_pWithWarpLDA {
     protected void computeBothEstimators() {
         theta_p = new double[D][K];
         phi_p = new double[K][V];
-        double[] prob = new double[K];
-        double betaSum = beta * V;
+        prob = new double[K];
         for (int d = 0; d < D; d++) {
+            if(d%100==0) System.out.println(d+" "+new Date());
             TIntIntIterator it = documentWordFrequencies[d].iterator();
             while (it.hasNext()) {
                 it.advance();
                 int word = it.key();
-
                 for (int k = 0; k < K; k++) {
-                    prob[k] = (alpha + nd[d][k]) * (nw[k][word] + beta) / (nwsum[k] + betaSum);
+                    calculateP(d, word, k);
                 }
-
-                //p = computeP(p, word, d);
                 //average sampling probabilities
                 prob = Utils.normalize(prob, 1);
 
@@ -343,5 +344,9 @@ public class CGS_pWithWarpLDA {
             }
         }
         return ll;
+    }
+
+    void calculateP(int d, int word, int k) {
+        prob[k] = (alpha + nd[d][k]) * (nw[k][word] + beta) / (nwsum[k] + betaSum);
     }
 }
