@@ -25,6 +25,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -50,6 +52,8 @@ public class CGS_pWithWarpLDA {
     protected TIntIntHashMap documentWordFrequencies[];
     protected List<String> documents;
     protected int docs[][];
+    private double[][] theta_p;
+    private double[][] phi_p;
 
     /**
      *
@@ -143,30 +147,21 @@ public class CGS_pWithWarpLDA {
         long b = calccountersTime - runningTime;
         System.out.println("Calculating counters duration:" + b);
         double[][] theta = warp.computeTheta();
-        long thetaTime = System.currentTimeMillis();
-        long c = thetaTime - calccountersTime;
-        System.out.println("Calculating theta duration:" + c);
-        double[][] theta_p = warp.computeTheta_p();
-        long theta_pTime = System.currentTimeMillis();
-        long d = theta_pTime - thetaTime;
-        System.out.println("Calculating theta_p duration:" + d);
         double[][] phi = warp.computePhi();
-        long phiTime = System.currentTimeMillis();
-        long e = (phiTime - theta_pTime);
-        System.out.println("Calculating phi duration:" + e);
-        double[][] phi_p = warp.computePhi_p();
-        long phi_pTime = System.currentTimeMillis();
-        long f = phi_pTime - phiTime;
-        System.out.println("Calculating phi_p duration:" + f);
+        long stdTime = System.currentTimeMillis();
+        long c = stdTime - calccountersTime;
+        System.out.println("Calculating theta and phi duration:" + c);
+        warp.computeBothEstimators();
+        long cgs_pTime = System.currentTimeMillis();
+        long d = cgs_pTime - stdTime;
+        System.out.println("Calculating theta_p and phi_p duration:" + d);
 
 //        System.out.println("phi + theta (Griffiths Steyvers estimator): " + warp.logLikelihood(phi, theta));
 //        System.out.println("phi_p + theta: " + warp.logLikelihood(phi_p, theta));
 //        System.out.println("phi + theta_p: " + warp.logLikelihood(phi, theta_p));
 //        System.out.println("phi_p + theta_p: " + warp.logLikelihood(phi_p, theta_p));
-        System.out.print((a +b+ c + e) + " " + warp.logLikelihood(phi, theta) + " ");
-        System.out.print((a +b+ c + f) + " " + warp.logLikelihood(phi_p, theta) + " ");
-        System.out.print((a +b+ d + e) + " " + warp.logLikelihood(phi, theta_p) + " ");
-        System.out.println((a +b+ d + f) + " " + warp.logLikelihood(phi_p, theta_p));
+        System.out.print((a + b + c) + " " + warp.logLikelihood(phi, theta) + " ");
+        System.out.println((a + b + d) + " " + warp.logLikelihood(warp.phi_p, warp.theta_p));
 
     }
 
@@ -282,6 +277,49 @@ public class CGS_pWithWarpLDA {
         return phi_p;
     }
 
+    protected void computeBothEstimators() {
+        theta_p = new double[D][K];
+        phi_p = new double[K][V];
+        double[] prob = new double[K];
+        double betaSum = beta * V;
+        for (int d = 0; d < D; d++) {
+            TIntIntIterator it = documentWordFrequencies[d].iterator();
+            while (it.hasNext()) {
+                it.advance();
+                int word = it.key();
+
+                for (int k = 0; k < K; k++) {
+                    prob[k] = (alpha + nd[d][k]) * (nw[k][word] + beta) / (nwsum[k] + betaSum);
+                }
+
+                //p = computeP(p, word, d);
+                //average sampling probabilities
+                prob = Utils.normalize(prob, 1);
+
+                for (int k = 0; k < K; k++) {
+                    theta_p[d][k] += prob[k] * it.value();
+                    phi_p[k][word] += prob[k] * it.value();
+                }
+            }
+
+            for (int k = 0; k < K; k++) {
+                theta_p[d][k] += alpha;
+            }
+            // normalize
+            theta_p[d] = Utils.normalize(theta_p[d], 1);
+        }
+
+        for (int k = 0; k < K; k++) {
+            //add beta hyperparameter
+            for (int w = 0; w < V; w++) {
+                phi_p[k][w] = phi_p[k][w] + beta;
+            }
+            //normalize
+            phi_p[k] = Utils.normalize(phi_p[k], 1.0);
+        }
+
+    }
+
     /**
      *
      * @param phi
@@ -306,5 +344,4 @@ public class CGS_pWithWarpLDA {
         }
         return ll;
     }
-
 }
