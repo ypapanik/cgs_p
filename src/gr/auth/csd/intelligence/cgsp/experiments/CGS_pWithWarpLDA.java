@@ -128,7 +128,7 @@ public class CGS_pWithWarpLDA {
 
         String json = args[0];
         int iter = Integer.parseInt(args[1]);
-        int K = 1000;//Integer.parseInt(args[2]);
+        int K = 100;//Integer.parseInt(args[2]);
         double alpha = 0.1;//Double.parseDouble(args[3]);
         double beta = 0.01;//Double.parseDouble(args[4]);
         long startTime = System.currentTimeMillis();
@@ -286,7 +286,7 @@ public class CGS_pWithWarpLDA {
         phi_p = new double[K][V];
         prob = new double[K];
         for (int d = 0; d < D; d++) {
-            if(d%100==0) System.out.println(d+" "+new Date());
+            //if(d%100==0) System.out.println(d+" "+new Date());
             TIntIntIterator it = documentWordFrequencies[d].iterator();
             while (it.hasNext()) {
                 it.advance();
