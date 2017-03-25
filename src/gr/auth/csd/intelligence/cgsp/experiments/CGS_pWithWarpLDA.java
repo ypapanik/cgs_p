@@ -55,8 +55,9 @@ public class CGS_pWithWarpLDA {
     protected int docs[][];
     private double[][] theta_p;
     private double[][] phi_p;
-    protected double[] prob;
     private double betaSum;
+    private double[][] theta;
+    private double[][] phi;
 
     /**
      *
@@ -128,7 +129,7 @@ public class CGS_pWithWarpLDA {
 
         String json = args[0];
         int iter = Integer.parseInt(args[1]);
-        int K = 100;//Integer.parseInt(args[2]);
+        int K = 50;//Integer.parseInt(args[2]);
         double alpha = 0.1;//Double.parseDouble(args[3]);
         double beta = 0.01;//Double.parseDouble(args[4]);
         long startTime = System.currentTimeMillis();
@@ -190,7 +191,7 @@ public class CGS_pWithWarpLDA {
      * @return
      */
     protected double[][] computeTheta() {
-        double[][] theta = new double[D][K];
+        theta = new double[D][K];
         for (int d = 0; d < D; d++) {
             for (int k = 0; k < K; k++) {
                 theta[d][k] = nd[d][k] + alpha;
@@ -238,7 +239,7 @@ public class CGS_pWithWarpLDA {
      * @return
      */
     protected double[][] computePhi() {
-        double[][] phi = new double[K][V];
+        phi = new double[K][V];
         for (int k = 0; k < K; k++) {
             for (int w = 0; w < V; w++) {
                 phi[k][w] = nw[k][w] + beta;
@@ -284,32 +285,30 @@ public class CGS_pWithWarpLDA {
     protected void computeBothEstimators() {
         theta_p = new double[D][K];
         phi_p = new double[K][V];
-        prob = new double[K];
-        for (int d = 0; d < D; d++) {
-            //if(d%100==0) System.out.println(d+" "+new Date());
-            TIntIntIterator it = documentWordFrequencies[d].iterator();
-            while (it.hasNext()) {
-                it.advance();
-                int word = it.key();
-                for (int k = 0; k < K; k++) {
-                    calculateP(d, word, k);
-                }
-                //average sampling probabilities
-                prob = Utils.normalize(prob, 1);
 
-                for (int k = 0; k < K; k++) {
-                    theta_p[d][k] += prob[k] * it.value();
-                    phi_p[k][word] += prob[k] * it.value();
-                }
+        double[][] phi = new double[K][V];
+        for (int k = 0; k < K; k++) {
+            for (int w = 0; w < V; w++) {
+                phi[k][w] = nw[k][w] + beta;
             }
-
-            for (int k = 0; k < K; k++) {
-                theta_p[d][k] += alpha;
-            }
-            // normalize
-            theta_p[d] = Utils.normalize(theta_p[d], 1);
+            phi[k] = Utils.normalize(phi[k], 1.0);
         }
 
+        ArrayList<CallablePcalculation> calculators = new ArrayList<>();
+        int threads = 8;
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        for (int i = 0; i < threads; i++) {
+            calculators.add(new CallablePcalculation(this, 0, D - 1, threads, i, phi));
+        }
+        try {
+            pool.invokeAll(calculators);
+        } catch (InterruptedException ex) {
+        }
+        pool.shutdown();
+
+//        for (int d = 0; d < D; d++) {
+//            processDoc(d);
+//        }
         for (int k = 0; k < K; k++) {
             //add beta hyperparameter
             for (int w = 0; w < V; w++) {
@@ -346,7 +345,30 @@ public class CGS_pWithWarpLDA {
         return ll;
     }
 
-    void calculateP(int d, int word, int k) {
-        prob[k] = (alpha + nd[d][k]) * (nw[k][word] + beta) / (nwsum[k] + betaSum);
+    protected void processDoc(int d, double[][] phi) {
+        //if(d%100==0) System.out.println(d+" "+new Date());
+        double[] prob = new double[K];
+        TIntIntIterator it = documentWordFrequencies[d].iterator();
+        while (it.hasNext()) {
+            it.advance();
+            int word = it.key();
+            for (int k = 0; k < K; k++) {
+                prob[k] = (nd[d][k]+alpha) * (phi[k][word]) / (nwsum[k]);
+//(alpha + nd[d][k]) * (nw[k][word] + beta) / (nwsum[k] + betaSum);
+            }
+            //average sampling probabilities
+            prob = Utils.normalize(prob, 1);
+
+            for (int k = 0; k < K; k++) {
+                theta_p[d][k] += prob[k] * it.value();
+                phi_p[k][word] += prob[k] * it.value();
+            }
+        }
+
+        for (int k = 0; k < K; k++) {
+            theta_p[d][k] += alpha;
+        }
+        // normalize
+        theta_p[d] = Utils.normalize(theta_p[d], 1);
     }
 }
