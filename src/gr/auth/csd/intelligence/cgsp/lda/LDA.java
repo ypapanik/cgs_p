@@ -22,6 +22,7 @@ import gr.auth.csd.intelligence.cgsp.lda.models.EstimationConvergenceExperimentM
 import gr.auth.csd.intelligence.cgsp.lda.models.InferenceExpModel;
 import gr.auth.csd.intelligence.cgsp.lda.models.InferenceModel;
 import gr.auth.csd.intelligence.cgsp.lda.models.Model;
+import gr.auth.csd.intelligence.cgsp.lda.models.Phi_pModel;
 import gr.auth.csd.intelligence.cgsp.preprocessing.CorpusJSON;
 import gr.auth.csd.intelligence.cgsp.preprocessing.Dictionary;
 /**
@@ -58,10 +59,11 @@ public class LDA {
      */
     public LDA(LDACmdOption option) {
         corpus = new CorpusJSON(option.trainingFile);
-        dictionary = new Dictionary(corpus, 1, 1000000, 10, 9);
+        dictionary = new Dictionary(corpus, 2, 610, 10, 9);
         this.method = option.method;
         trainedPhi = option.modelName + ".phi";
         data = new LDADataset(dictionary, option.inf, option.K, trainedPhi);
+        dictionary.writeDictionary(option.dictionary);
         this.chains = option.chains;
         this.modelName = option.modelName;
         this.niters = option.niters;
@@ -87,6 +89,9 @@ public class LDA {
                     break;
                 case "cvb0":
                     trnModel = new CVB0Model(data, a, false, b, perp, niters, nburnin, modelName, samplingLag);
+                    break;
+                case "cgsp":
+                    trnModel = new Phi_pModel(data, a, false, b, perp, niters, nburnin, modelName, samplingLag);
                     break;
                 default:
                     trnModel = new Model(data, a, false, b, perp, niters, nburnin, modelName, samplingLag);

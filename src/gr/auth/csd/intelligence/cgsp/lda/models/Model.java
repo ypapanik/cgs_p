@@ -463,10 +463,10 @@ public class Model {
      */
     public double[][] estimate(boolean save) {
         initialize();
-        //System.out.println("Sampling " + niters + " iterations");
+        System.out.println("Sampling " + niters + " iterations");
         for (int i = 1; i <= niters; i++) {
             if (i % 50 == 0) {
-                //System.out.println(new Date() + " " + i);
+                System.out.println(new Date() + " " + i);
             }
 
             for (int d = 0; d < M; d++) {

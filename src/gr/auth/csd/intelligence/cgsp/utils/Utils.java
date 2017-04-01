@@ -38,7 +38,11 @@ import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -183,7 +187,8 @@ public class Utils {
 
     /**
      * Get CPU time in nanoseconds.
-     * @return 
+     *
+     * @return
      */
     public static long getCpuTime() {
         ThreadMXBean bean = ManagementFactory.getThreadMXBean();
@@ -193,7 +198,8 @@ public class Utils {
 
     /**
      * Get user time in nanoseconds.
-     * @return 
+     *
+     * @return
      */
     public static long getUserTime() {
         ThreadMXBean bean = ManagementFactory.getThreadMXBean();
@@ -203,7 +209,8 @@ public class Utils {
 
     /**
      * Get system time in nanoseconds.
-     * @return 
+     *
+     * @return
      */
     public static long getSystemTime() {
         ThreadMXBean bean = ManagementFactory.getThreadMXBean();
@@ -226,7 +233,6 @@ public class Utils {
     }
 
     //to account for cases like e.g. 5.49 ->6 instead of 5
-
     /**
      *
      * @param num
@@ -446,7 +452,6 @@ public class Utils {
     }
 
     //standard deviation
-
     /**
      *
      * @param h
@@ -737,13 +742,55 @@ public class Utils {
         }
     }
 
-public static String toSignificantFiguresString(BigDecimal bd){
-    String test = String.format("%."+3+"G", bd);
-    if (test.contains("E+")){
-        test = String.format(Locale.US, "%.0f", Double.valueOf(String.format("%."+3+"G", bd)));
+    public static String toSignificantFiguresString(BigDecimal bd) {
+        String test = String.format("%." + 3 + "G", bd);
+        if (test.contains("E+")) {
+            test = String.format(Locale.US, "%.0f", Double.valueOf(String.format("%." + 3 + "G", bd)));
+        }
+        return test;
     }
-    return test;
-}
 
+    public static double[] getColumn(double[][] array, int columnOfInterest) {
+        double[] column = new double[array.length];
+        //System.out.println(columnOfInterest+" "+array[0].length);
+        for (int row = 0; row < array.length; row++) {
+            column[row] = array[row][columnOfInterest];
+        }
+        return column;
+    }
+
+    public static double[] matrixMultiplication(double[] vector, double[][] matrix) {
+        double[] result = new double[matrix[0].length];
+
+        for (int k = 0; k < vector.length; k++) {
+            for (int v = 0; v < matrix[0].length; v++) {
+                result[v] += vector[k] * matrix[k][v];
+
+            }
+        }
+        return result;
+    }
+
+    public static HashMap<Integer, Integer> getSortedIndices(double[] array) {
+        HashMap<Integer, Integer> ranking = new HashMap<>();
+        for (int i = 0; i < array.length; i++) {
+            int index = Utils.maxIndex(array);
+            array[index] = Double.MIN_VALUE;
+            ranking.put(index, i + 1);
+        }
+        return ranking;
+    }
+
+    public static double median(double[] array) {
+        double[] numArray = array.clone();
+        Arrays.sort(numArray);
+        double median;
+        if (numArray.length % 2 == 0) {
+            median = ((double) numArray[numArray.length / 2] + (double) numArray[numArray.length / 2 - 1]) / 2;
+        } else {
+            median = (double) numArray[numArray.length / 2];
+        }
+        return median;
+    }
 
 }

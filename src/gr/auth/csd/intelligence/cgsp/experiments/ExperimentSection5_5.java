@@ -32,11 +32,12 @@ public class ExperimentSection5_5 {
     public static void main(String args[]) {
         LDACmdOption option = new LDACmdOption(args);
         //option.trainingFile = "data/reutersTrain";
-        option.K =20;
-        option.niters = 50;
+        option.K =100;
+        option.niters = 250;
         option.alpha = 0.1;
+        option.modelName = option.K+"";
         //option.method = "conv";
-        option.method = "std";
+        option.method = "cgsp";
         //option.method = "cvb0";
         LDA lda = new LDA(option);
         lda.estimation();
