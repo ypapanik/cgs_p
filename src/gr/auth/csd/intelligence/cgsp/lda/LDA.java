@@ -59,7 +59,7 @@ public class LDA {
      */
     public LDA(LDACmdOption option) {
         corpus = new CorpusJSON(option.trainingFile);
-        dictionary = new Dictionary(corpus, 2, 610, 10, 9);
+        dictionary = new Dictionary(corpus, 5, 10000, 10, 9);
         this.method = option.method;
         trainedPhi = option.modelName + ".phi";
         data = new LDADataset(dictionary, option.inf, option.K, trainedPhi);

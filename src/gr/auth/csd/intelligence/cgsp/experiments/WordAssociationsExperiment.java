@@ -43,14 +43,14 @@ public class WordAssociationsExperiment {
 
         //train an LDA model, calculate phi and phi_p estimators
         LDACmdOption option = new LDACmdOption(args);
-        option.trainingFile = "data/tasaTrain";
-        option.K = 20;
+        option.trainingFile = "tasa";
+        option.K = 500;
         option.niters = 250;
         option.alpha = 0.1;
         option.modelName = option.K + "";
         option.method = "cgsp";
-//        LDA lda = new LDA(option);
-//        lda.estimation();
+        //LDA lda = new LDA(option);
+        //lda.estimation();
 
         double[][] phip = Model.readPhi(option.modelName + ".phi_p");
         double[][] phi = Model.readPhi(option.modelName + ".phi");
@@ -99,7 +99,6 @@ public class WordAssociationsExperiment {
         
         
         
-        
     }
 
     private static int[] getRank(double[][] phi, Dictionary dictionary, NGram cueNGram, 
@@ -110,11 +109,13 @@ public class WordAssociationsExperiment {
         HashMap<Integer, Integer> sortedIndices = Utils.getSortedIndices(phiAssociatedWords);
         int[] rank = new int[5];
         int i = 0;
+        //for(int ind=0;ind<5;ind++) System.out.println(cueNGram+" "+dictionary.getNgram(sortedIndices.get(ind)));
         for (String associatedWord : norm.getValue()) {
+            
             List<String> ngramList = new ArrayList<>();
             ngramList.add(associatedWord);
             NGram wordNGram = new NGram(ngramList);
-            //System.out.println(wordNGram+" ");//+dictionary.getId().get(wordNGram));
+            System.out.println(wordNGram+" ");//+dictionary.getId().get(wordNGram));
             if (dictionary.getId().containsKey(wordNGram)) {
                 rank[i] = sortedIndices.get(dictionary.getId().get(wordNGram));
                 i++;

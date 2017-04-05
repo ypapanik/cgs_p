@@ -38,6 +38,7 @@ import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -781,8 +782,8 @@ public class Utils {
         return ranking;
     }
 
-    public static double median(double[] array) {
-        double[] numArray = array.clone();
+    public static double median(int[] array) {
+        int[] numArray = array.clone();
         Arrays.sort(numArray);
         double median;
         if (numArray.length % 2 == 0) {
@@ -792,5 +793,29 @@ public class Utils {
         }
         return median;
     }
+    
+    public static int median(ArrayList<Integer> s) {
+        int i = -1;
+        //Collections.sort(s);
+        Iterator<Integer> it = s.iterator();
+        int el=0;
+        while(it.hasNext()) {
+            i = it.next();
+            if(el==s.size()/2) break;
+            el++;
+        }
+        return i;
+    }
 
+        public static int median(TreeSet<Integer> s) {
+        int i = -1;
+        Iterator<Integer> it = s.iterator();
+        int el=0;
+        while(it.hasNext()) {
+            i = it.next();
+            if(el==s.size()/2) break;
+            el++;
+        }
+        return i;
+    }
 }
