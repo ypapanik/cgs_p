@@ -1,6 +1,6 @@
 Improved Gibbs Sampling Parameter Estimators for Latent Dirichlet Allocation - code
 
-This code is strictly meant to be for easy replication of our experiments and in no case it represents an acceptable software package to be used in any other application.
+This code is mainly meant to be used for easy replication of our experiments.
 All experiments are in the package gr.auth.csd.mlkd.experiments and for running it is normally sufficient to run as:
 experiment_class -trainingFile trainFile -testFile testFile
 
