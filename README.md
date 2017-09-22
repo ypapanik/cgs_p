@@ -8,11 +8,15 @@ We have included also two simple classes to show how the output of a trained War
 
 In case you would like to cite the methods or this code, use:
 
-@article{papanikolaou2015improved,
-  title={Improved Gibbs Sampling Parameter Estimators for Latent Dirichlet Allocation},
-  author={Papanikolaou, Yannis and Rubin, Timothy N and Foulds, James R and Tsoumakas, Grigorios},
-  journal={arXiv preprint arXiv:1505.02065},
-  year={2017}
+@article{JMLR:v18:16-526,
+  author  = {Yannis Papanikolaou and James R. Foulds and Timothy N. Rubin and Grigorios Tsoumakas},
+  title   = {Dense Distributions from Sparse Samples: Improved Gibbs Sampling Parameter Estimators for LDA},
+  journal = {Journal of Machine Learning Research},
+  year    = {2017},
+  volume  = {18},
+  number  = {62},
+  pages   = {1-58},
+  url     = {http://jmlr.org/papers/v18/16-526.html}
 }
 
 For any question, please contact Yannis Papanikolaou at ypapanik@csd.auth.gr
