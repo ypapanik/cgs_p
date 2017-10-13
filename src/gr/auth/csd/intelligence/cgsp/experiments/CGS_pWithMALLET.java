@@ -24,6 +24,8 @@ import cc.mallet.pipe.TokenSequenceRemoveStopwords;
 import cc.mallet.pipe.iterator.CsvIterator;
 import cc.mallet.topics.ParallelTopicModel;
 import cc.mallet.types.InstanceList;
+import gnu.trove.iterator.TIntObjectIterator;
+import gnu.trove.map.hash.TIntObjectHashMap;
 import gr.auth.csd.intelligence.cgsp.preprocessing.JSONtoMALLET;
 import gr.auth.csd.intelligence.cgsp.utils.Utils;
 import java.io.File;
@@ -42,12 +44,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Example to show how a trained MALLET LDA model can be used to compute \theta_p
- * and \phi_p.
- * 
+ * Example to show how a trained MALLET LDA model can be used to compute
+ * \theta_p and \phi_p.
+ *
  * @author Yannis Papanikolaou <ypapanik@csd.auth.gr>
  */
 public class CGS_pWithMALLET extends CGS_pWithWarpLDA {
+
+    private final TIntObjectHashMap<ArrayList<Integer>> documents2;
+    TIntObjectHashMap<ArrayList<Integer>> zeta;
 
     /**
      *
@@ -70,55 +75,47 @@ public class CGS_pWithMALLET extends CGS_pWithWarpLDA {
 
         K = 0;
         V = 0;
-        ArrayList<ArrayList<Integer>> documents = new ArrayList<>();
-        ArrayList<ArrayList<Integer>> zeta = new ArrayList<>();
+        documents2 = new TIntObjectHashMap<>();
+        zeta = new TIntObjectHashMap<>();
         for (int i = 3; i < lines.size(); i++) {
             String line = lines.get(i);
             String[] split = line.split(" ");
             int d = Integer.parseInt(split[0]);
-            if (d > documents.size()-1 ) {
-                documents.add(d, new ArrayList<>());
+            if (!documents2.containsKey(d)) {
+                documents2.put(d, new ArrayList<>());
             }
             int pos = Integer.parseInt(split[2]);
             int wordType = Integer.parseInt(split[3]);
             if (V < wordType) {
                 V = wordType;
             }
-            documents.get(d).add(pos, wordType);
+            documents2.get(d).add(pos, wordType);
             int topic = Integer.parseInt(split[5]);
             if (K < topic) {
                 K = topic;
             }
-            if (zeta.size() -1 < d) {
-                zeta.add(d, new ArrayList<>());
+            if (!zeta.containsKey(d)) {
+                zeta.put(d, new ArrayList<>());
             }
             zeta.get(d).add(pos, topic);
         }
-        D = documents.size();
+        D = documents2.size();
         V++;
         K++;
         nw = new double[K][V];
         nd = new double[D][K];
         nwsum = new double[K];
-        z = new int[D][];
-        docs = new int[D][];
-        for (int d = 0; d < D; d++) {
-            z[d] = new int[zeta.get(d).size()];
-            docs[d] = new int[documents.get(d).size()];
-        }
-
-        for (int i = 3; i < lines.size(); i++) {
-            String line = lines.get(i);
-            String[] split = line.split(" ");
-            int doc = Integer.parseInt(split[0]);
-            int pos = Integer.parseInt(split[2]);
-            int wordType = Integer.parseInt(split[3]);
-            int topic = Integer.parseInt(split[5]);
-            nw[topic][wordType]++;
-            nd[doc][topic]++;
-            nwsum[topic]++;
-            z[doc][pos] = topic;
-            docs[doc][pos] = wordType;
+        TIntObjectIterator<ArrayList<Integer>> it = documents2.iterator();
+        while (it.hasNext()) {
+            it.advance();
+            int doc = it.key();
+            for (int w=0;w<it.value().size();w++) {
+                int wordType = it.value().get(w);
+                int topic = zeta.get(doc).get(w);
+                nw[topic][wordType]++;
+                nd[doc][topic]++;
+                nwsum[topic]++;
+            }
         }
     }
 
@@ -175,4 +172,98 @@ public class CGS_pWithMALLET extends CGS_pWithWarpLDA {
         System.out.println("phi_p + theta_p: " + mallet.logLikelihood(phi_p, theta_p));
     }
 
+    /**
+     *
+     * @return
+     */
+    @Override
+    protected double[][] computeTheta_p() {
+        double[][] theta_p = new double[D][K];
+        for (int d = 0; d < D; d++) {
+            double[] p = new double[K];
+            for (int word : documents2.get(d)) {
+                //System.out.println(word);
+                for (int k = 0; k < K; k++) {
+                    p[k] = (alpha + nd[d][k]) * (nw[k][word] + beta) / (nwsum[k] + V * beta);
+                }
+                //average sampling probabilities
+                p = Utils.normalize(p, 1);
+
+                for (int k = 0; k < K; k++) {
+                    theta_p[d][k] += p[k];
+                }
+            }
+
+            for (int k = 0; k < K; k++) {
+                theta_p[d][k] += alpha;
+            }
+            // normalize
+            theta_p[d] = Utils.normalize(theta_p[d], 1);
+
+        }
+        return theta_p;
+    }
+
+    /**
+     *
+     * @return
+     */
+    @Override
+    protected double[][] computePhi_p() {
+        double[][] phi_p = new double[K][V];
+        for (int d = 0; d < D; d++) {
+            double[] p = new double[K];
+            for (int word : documents2.get(d)) {
+                for (int k = 0; k < K; k++) {
+                    p[k] = (nw[k][word] + beta) * (nd[d][k] + alpha) / (nwsum[k] + V * beta);
+                }
+                //average sampling probabilities
+                p = Utils.normalize(p, 1);
+                for (int k = 0; k < K; k++) {
+                    phi_p[k][word] += p[k];
+                }
+            }
+        }
+        for (int k = 0; k < K; k++) {
+            //add beta hyperparameter
+            for (int w = 0; w < V; w++) {
+                phi_p[k][w] = phi_p[k][w] + beta;
+            }
+            //normalize
+            phi_p[k] = Utils.normalize(phi_p[k], 1.0);
+        }
+        return phi_p;
+    }
+
+        /**
+     *
+     * @param phi
+     * @param theta
+     * @return
+     */
+    @Override
+    public double logLikelihood(double phi[][], double[][] theta) {
+        double ll = 0;
+        TIntObjectIterator<ArrayList<Integer>> it = documents2.iterator();
+        int d = 0;
+        while(it.hasNext()) {
+            it.advance();
+            for(int word:it.value())
+            {
+                double l = 0;
+                for (int k = 0; k < K; k++) {
+                    if (phi[k][word] != 0 && theta[d][k] != 0) {
+                        l += phi[k][word] * theta[d][k];
+                    }
+
+                }
+                ll += Math.log(l);
+                //if(Double.isNaN(ll)) System.out.println(d+" "+word+" "+l+" "+ Math.log(l));
+            }
+            d++;
+        }
+        return ll;
+    }
+
+    
 }
